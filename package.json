@@ -1,0 +1,14 @@
+﻿{
+  "name": "lumiere-restaurant",
+  "version": "1.0.0",
+  "description": "Lumiere Fine Dining - Reservation System",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "cors": "^2.8.5"
+  }
+}

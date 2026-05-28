@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lumiere Admin - Reservations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <style>
+    :root {
+      --bg: #0a0d12;
+      --bg-card: #111520;
+      --bg-surface: #161c26;
+      --accent: #c8a27a;
+      --accent-light: #dbb998;
+      --accent-dark: #a8824e;
+      --text: #e8e4df;
+      --text-muted: #a8a29e;
+      --border: rgba(200,162,122,0.18);
+      --glow: rgba(200,162,122,0.08);
+      --green: #4ade80;
+      --red: #f87171;
+      --yellow: #fbbf24;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 180px 180px;
+    }
+    .admin-header {
+      background: rgba(10, 13, 18, 0.75);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .admin-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+    }
+    .admin-logo span { color: var(--text-muted); font-weight: 400; font-size: 1rem; margin-left: 0.75rem; letter-spacing: normal; font-family: 'Inter', sans-serif;}
+    .back-link {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.85rem;
+      border: 1px solid var(--accent);
+      padding: 0.5rem 1.2rem;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .back-link:hover { background: var(--accent); color: var(--bg); }
+    .container { max-width: 1200px; margin: 0 auto; padding: 3rem 2rem; }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+    .stat-card {
+      background: linear-gradient(135deg, var(--bg-surface), rgba(22,28,38,0.6));
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: transform 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+    }
+    .stat-card:hover { transform: translateY(-4px); border-color: rgba(200,162,122,0.4); box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px var(--glow); }
+    .stat-number {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-top: 0.5rem; }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      align-items: center;
+    }
+    .filter-btn {
+      background: transparent;
+      border: 1px solid rgba(200,162,122,0.3);
+      color: var(--text-muted);
+      padding: 0.6rem 1.5rem;
+      border-radius: 30px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .filter-btn:hover { border-color: var(--accent); color: var(--text); background: rgba(200,162,122,0.05); }
+    .filter-btn.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+      color: var(--bg);
+      border-color: var(--accent);
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(200,162,122,0.3);
+    }
+    .date-input-wrapper {
+      position: relative;
+      margin-left: auto;
+      width: 250px;
+    }
+    .date-input {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 2.5rem 0.6rem 1.2rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      width: 100%;
+      transition: border-color 0.3s ease;
+      cursor: pointer;
+    }
+    .date-input:focus { outline: none; border-color: var(--accent); }
+    .date-input-wrapper svg {
+      position: absolute;
+      right: 0.8rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Reservation Cards */
+    .reservations-list { display: flex; flex-direction: column; gap: 1rem; }
+    .res-card {
+      background: linear-gradient(135deg, var(--bg-surface), rgba(22,28,38,0.6));
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1.5rem;
+      align-items: center;
+      transition: all 0.4s ease;
+    }
+    .res-card:hover { border-color: rgba(200,162,122,0.4); box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px var(--glow); transform: translateY(-2px); }
+    .res-info h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 1rem; }
+    .res-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .res-meta span { display: flex; align-items: center; gap: 0.4rem; }
+    .res-notes { font-size: 0.85rem; color: var(--accent-light); font-style: italic; margin-top: 0.75rem; border-left: 2px solid var(--accent); padding-left: 10px; }
+    .res-actions { display: flex; gap: 0.75rem; flex-shrink: 0; }
+    .action-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: transparent;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+    }
+    .action-btn.confirm { color: var(--green); border-color: rgba(74,222,128,0.4); }
+    .action-btn.confirm:hover { background: rgba(74,222,128,0.15); box-shadow: 0 0 10px rgba(74,222,128,0.2); }
+    .action-btn.cancel { color: var(--yellow); border-color: rgba(251,191,36,0.4); }
+    .action-btn.cancel:hover { background: rgba(251,191,36,0.15); box-shadow: 0 0 10px rgba(251,191,36,0.2); }
+    .action-btn.delete { color: var(--red); border-color: rgba(248,113,113,0.4); }
+    .action-btn.delete:hover { background: rgba(248,113,113,0.15); box-shadow: 0 0 10px rgba(248,113,113,0.2); }
+
+    /* Status Badge */
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-family: 'Inter', sans-serif;
+    }
+    .status-badge.pending { background: rgba(251,191,36,0.15); color: var(--yellow); border: 1px solid rgba(251,191,36,0.3); }
+    .status-badge.confirmed { background: rgba(74,222,128,0.15); color: var(--green); border: 1px solid rgba(74,222,128,0.3); }
+    .status-badge.cancelled { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+
+    .empty-state {
+      text-align: center;
+      padding: 5rem 2rem;
+      color: var(--text-muted);
+      background: linear-gradient(135deg, var(--bg-surface), rgba(22,28,38,0.6));
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+    }
+    .empty-state svg { width: 48px; height: 48px; margin: 0 auto 1rem; color: var(--accent); opacity: 0.7; }
+    .empty-state h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--accent); margin-bottom: 0.5rem; }
+
+    /* SVGs in meta */
+    .res-meta svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
+
+    /* Flatpickr Custom Theme (Midnight Elegance) */
+    .flatpickr-calendar {
+      background: var(--bg-surface) !important;
+      border: 1px solid var(--border) !important;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5) !important;
+      font-family: 'Inter', sans-serif !important;
+      padding: 10px !important;
+      border-radius: 12px !important;
+    }
+    .flatpickr-months {
+      background: var(--bg-surface) !important;
+      margin-bottom: 10px !important;
+    }
+    .flatpickr-month {
+      background: var(--bg-surface) !important;
+      color: var(--text) !important;
+      fill: var(--text) !important;
+      height: 40px !important;
+    }
+    .flatpickr-current-month {
+        padding-top: 16px !important;
+        font-size: 1.1rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        color: var(--text) !important;
+      }
+      .flatpickr-current-month input.cur-year {
+        display: none !important;
+      }
+      .flatpickr-current-month .flatpickr-monthDropdown-months {
+        background: transparent !important;
+        color: var(--text) !important;
+        border: none !important;
+        appearance: none;
+        -webkit-appearance: none;
+        font-weight: 600 !important;
+        cursor: pointer;
+        outline: none !important;
+        width: auto !important;
+        margin: 0 !important;
+      }
+    .flatpickr-current-month .flatpickr-monthDropdown-months option {
+      background: #161c26 !important;
+      color: #e5e7eb !important;
+    }
+    .flatpickr-current-month .numInputWrapper { display: none !important; }
+    .flatpickr-prev-month, .flatpickr-next-month { top: 15px !important; }
+    .flatpickr-prev-month svg, .flatpickr-next-month svg {
+      fill: var(--text) !important;
+      width: 12px !important;
+      height: 12px !important;
+      transition: fill 0.3s ease !important;
+    }
+    .flatpickr-prev-month:hover svg, .flatpickr-next-month:hover svg { fill: var(--accent) !important; }
+    .flatpickr-weekdays { background: var(--bg-surface) !important; }
+    span.flatpickr-weekday {
+      background: var(--bg-surface) !important;
+      color: var(--accent) !important;
+      font-weight: 600 !important;
+    }
+    .flatpickr-day { color: var(--text) !important; }
+    .flatpickr-day.inRange, .flatpickr-day.prevMonthDay.inRange, .flatpickr-day.nextMonthDay.inRange, .flatpickr-day.today.inRange, .flatpickr-day.prevMonthDay.today.inRange, .flatpickr-day.nextMonthDay.today.inRange, .flatpickr-day:hover, .flatpickr-day.prevMonthDay:hover, .flatpickr-day.nextMonthDay:hover, .flatpickr-day:focus, .flatpickr-day.prevMonthDay:focus, .flatpickr-day.nextMonthDay:focus {
+      background: rgba(200, 162, 122, 0.15) !important;
+      border-color: transparent !important;
+      color: var(--accent-light) !important;
+    }
+    .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange, .flatpickr-day.selected:focus, .flatpickr-day.startRange:focus, .flatpickr-day.endRange:focus, .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover, .flatpickr-day.selected.prevMonthDay, .flatpickr-day.startRange.prevMonthDay, .flatpickr-day.endRange.prevMonthDay, .flatpickr-day.selected.nextMonthDay, .flatpickr-day.startRange.nextMonthDay, .flatpickr-day.endRange.nextMonthDay {
+      background: var(--accent) !important;
+      border-color: var(--accent) !important;
+      color: #0a0d12 !important;
+      font-weight: 600 !important;
+    }
+    .flatpickr-day.today { border-color: var(--accent) !important; }
+
+    @media (max-width: 768px) {
+      .container { padding: 1.5rem 1rem; }
+      .res-card { grid-template-columns: 1fr; gap: 1rem; padding: 1.25rem; }
+      .res-actions { justify-content: flex-start; flex-wrap: wrap; }
+      .date-input-wrapper { margin-left: 0; width: 100%; }
+      .admin-header { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="admin-header">
+    <div class="admin-logo">LUMIERE <span>Admin Panel</span></div>
+    <a href="/" class="back-link">&larr; BACK TO SITE</a>
+  </header>
+
+  <div class="container">
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-number" id="stat-total">-</div><div class="stat-label">Total</div></div>
+      <div class="stat-card"><div class="stat-number" id="stat-today">-</div><div class="stat-label">Today</div></div>
+      <div class="stat-card"><div class="stat-number" id="stat-pending">-</div><div class="stat-label">Pending</div></div>
+      <div class="stat-card"><div class="stat-number" id="stat-confirmed">-</div><div class="stat-label">Confirmed</div></div>
+      <div class="stat-card"><div class="stat-number" id="stat-upcoming">-</div><div class="stat-label">Upcoming</div></div>
+      <div class="stat-card"><div class="stat-number" id="stat-cancelled">-</div><div class="stat-label">Cancelled</div></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="controls">
+      <button class="filter-btn active" data-status="all">All</button>
+      <button class="filter-btn" data-status="pending">Pending</button>
+      <button class="filter-btn" data-status="confirmed">Confirmed</button>
+      <button class="filter-btn" data-status="cancelled">Cancelled</button>
+      <div class="date-input-wrapper">
+        <input type="text" class="date-input" id="date-filter" placeholder="Select a date">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+      </div>
+    </div>
+
+    <!-- Reservations List -->
+    <div class="reservations-list" id="reservations-list"></div>
+  </div>
+
+  <script>
+    const API = '/api';
+    let currentFilter = 'all';
+
+    // Load stats
+    async function loadStats() {
+      try {
+        const res = await fetch(`${API}/stats`);
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('stat-total').textContent = data.stats.total;
+          document.getElementById('stat-today').textContent = data.stats.today;
+          document.getElementById('stat-pending').textContent = data.stats.pending;
+          document.getElementById('stat-confirmed').textContent = data.stats.confirmed;
+          document.getElementById('stat-upcoming').textContent = data.stats.upcoming;
+          document.getElementById('stat-cancelled').textContent = data.stats.cancelled;
+        }
+      } catch (err) { console.error('Failed to load stats:', err); }
+    }
+
+    // Load reservations
+    async function loadReservations() {
+      try {
+        let url = `${API}/reservations?status=${currentFilter}`;
+        const dateVal = document.getElementById('date-filter').value;
+        if (dateVal) url += `&date=${dateVal}`;
+
+        const res = await fetch(url);
+        const data = await res.json();
+        const list = document.getElementById('reservations-list');
+
+        if (!data.success || data.reservations.length === 0) {
+          list.innerHTML = `
+            <div class="empty-state">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+              <h3>No Reservations Found</h3>
+              <p>No reservations match your current filter.</p>
+            </div>`;
+          return;
+        }
+
+        list.innerHTML = data.reservations.map(r => `
+          <div class="res-card" data-id="${r.id}">
+            <div class="res-info">
+              <h3>${r.name} <span class="status-badge ${r.status}">${r.status}</span></h3>
+              <div class="res-meta">
+                <span><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> ${formatDate(r.date)}</span>
+                <span><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> ${formatTime(r.time)}</span>
+                <span><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg> ${r.guests} guest${r.guests > 1 ? 's' : ''}</span>
+                <span><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg> ${r.email}</span>
+                ${r.phone ? `<span><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg> ${r.phone}</span>` : ''}
+              </div>
+              ${r.notes ? `<div class="res-notes">"${r.notes}"</div>` : ''}
+            </div>
+            <div class="res-actions">
+              ${r.status !== 'confirmed' ? `<button class="action-btn confirm" onclick="updateStatus('${r.id}','confirmed')">✓ Confirm</button>` : ''}
+              ${r.status !== 'cancelled' ? `<button class="action-btn cancel" onclick="updateStatus('${r.id}','cancelled')">✕ Cancel</button>` : ''}
+              <button class="action-btn delete" onclick="deleteReservation('${r.id}')">🗑 Delete</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        console.error('Failed to load reservations:', err);
+      }
+    }
+
+    // Update status
+    async function updateStatus(id, status) {
+      await fetch(`${API}/reservations/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      loadReservations();
+      loadStats();
+    }
+
+    // Delete reservation
+    async function deleteReservation(id) {
+      if (!confirm('Are you sure you want to delete this reservation?')) return;
+      await fetch(`${API}/reservations/${id}`, { method: 'DELETE' });
+      loadReservations();
+      loadStats();
+    }
+
+    // Format helpers
+    function formatDate(d) {
+      return new Date(d + 'T00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    function formatTime(t) {
+      const [h, m] = t.split(':');
+      const hr = parseInt(h);
+      return `${hr > 12 ? hr - 12 : hr}:${m} ${hr >= 12 ? 'PM' : 'AM'}`;
+    }
+
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.status;
+        loadReservations();
+      });
+    });
+
+    // Date filter is handled by Flatpickr onChange event
+
+    // Init
+    loadStats();
+    loadReservations();
+
+    // Auto-refresh every 30 seconds
+    setInterval(() => { loadStats(); loadReservations(); }, 30000);
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script>
+    flatpickr("#date-filter", {
+      dateFormat: "Y-m-d",
+      allowInput: true,
+      altInput: true,
+      altFormat: "F j, Y",
+      onChange: function(selectedDates, dateStr, instance) {
+        loadReservations();
+      },
+      onReady: function(selectedDates, dateStr, instance) {
+        // Handle clear via keyboard backspace
+        if (instance.altInput) {
+          instance.altInput.addEventListener('input', function(e) {
+            if (e.target.value === '') {
+              instance.clear();
+              loadReservations();
+            }
+          });
+        }
+        
+        // Create custom year dropdown
+        const yearSelect = document.createElement('select');
+        yearSelect.className = 'flatpickr-monthDropdown-months custom-year-select';
+        yearSelect.style.marginLeft = '8px';
+        
+        const currentYear = new Date().getFullYear();
+        for (let i = 0; i <= 5; i++) {
+          const option = document.createElement('option');
+          option.value = currentYear + i;
+          option.text = currentYear + i;
+          option.className = 'flatpickr-monthDropdown-month';
+          if (i === 0) option.selected = true;
+          yearSelect.appendChild(option);
+        }
+        
+        yearSelect.addEventListener('change', function(e) {
+          instance.changeYear(Number(e.target.value));
+        });
+        
+        // Sync dropdown when year changes (e.g., via prev/next arrows)
+        instance.config.onYearChange = [function() {
+          yearSelect.value = instance.currentYear;
+        }];
+        
+        // Insert after month dropdown
+        const monthDropdown = instance.monthsDropdownContainer;
+        if (monthDropdown) {
+          monthDropdown.parentNode.insertBefore(yearSelect, monthDropdown.nextSibling);
+        }
+      }
+    });
+  </script>
+</body>
+</html>
