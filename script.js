@@ -1,4 +1,4 @@
-﻿// Navbar Scroll Effect
+// Navbar Scroll Effect
 const navbar = document.getElementById('navbar');
 window.addEventListener('scroll', () => {
   if (window.scrollY > 50) {
@@ -56,7 +56,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 });
 
 // Active nav link highlighting
-const sections = document.querySelectorAll('section[id]');
+const sections = document.querySelectorAll('section[id], footer[id]');
 const navLinks = document.querySelectorAll('.nav-link');
 
 window.addEventListener('scroll', () => {
@@ -67,6 +67,12 @@ window.addEventListener('scroll', () => {
       current = section.getAttribute('id');
     }
   });
+
+  // Check if we've reached the bottom of the page
+  if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 10) {
+    current = 'contact';
+  }
+
   navLinks.forEach(link => {
     link.classList.remove('text-amber-400');
     if (link.getAttribute('href') === '#' + current) {
@@ -166,13 +172,15 @@ if (resForm) {
 
     // Collect form data
     const reservation = {
+      id: Date.now().toString(36) + Math.random().toString(36).substring(2, 9),
       name: document.getElementById('res-name').value,
       email: document.getElementById('res-email').value,
       phone: document.getElementById('res-phone').value,
       guests: document.getElementById('res-guests').value,
       date: document.getElementById('res-date').value,
       time: document.getElementById('res-time').value,
-      notes: document.getElementById('res-notes').value
+      notes: document.getElementById('res-notes').value,
+      status: 'pending'
     };
 
     // Show loading state
@@ -181,46 +189,34 @@ if (resForm) {
     btn.disabled = true;
 
     try {
-      const response = await fetch('/api/reservations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(reservation)
-      });
+      // Simulate network delay for realistic feel
+      await new Promise(resolve => setTimeout(resolve, 800));
 
-      const data = await response.json();
+      // Get existing reservations
+      const existingStr = localStorage.getItem('lumiere_reservations');
+      const existing = existingStr ? JSON.parse(existingStr) : [];
+      
+      // Add new reservation to beginning
+      existing.unshift(reservation);
+      
+      // Save back to localStorage
+      localStorage.setItem('lumiere_reservations', JSON.stringify(existing));
 
-      if (data.success) {
-        // Success state
-        btn.textContent = '✓ Reservation Confirmed!';
-        btn.style.background = 'linear-gradient(135deg, #4ade80, #22c55e)';
-        btn.style.boxShadow = '0 4px 20px rgba(34,197,94,0.3)';
-        btn.style.opacity = '1';
-        resForm.reset();
+      // Success state
+      btn.innerHTML = '&#10003; Reservation Confirmed!';
+      btn.style.background = 'linear-gradient(135deg, #4ade80, #22c55e)';
+      btn.style.boxShadow = '0 4px 20px rgba(34,197,94,0.3)';
+      btn.style.opacity = '1';
+      resForm.reset();
 
-        setTimeout(() => {
-          btn.textContent = originalText;
-          btn.style.background = '';
-          btn.style.boxShadow = '';
-          btn.disabled = false;
-        }, 4000);
-      } else {
-        // Validation error
-        const errorMsg = data.errors ? data.errors.join(' ') : 'Something went wrong.';
-        btn.textContent = '✕ ' + errorMsg;
-        btn.style.background = 'linear-gradient(135deg, #f87171, #ef4444)';
-        btn.style.boxShadow = '0 4px 15px rgba(239,68,68,0.3)';
-        btn.style.opacity = '1';
-
-        setTimeout(() => {
-          btn.textContent = originalText;
-          btn.style.background = '';
-          btn.style.boxShadow = '';
-          btn.disabled = false;
-        }, 4000);
-      }
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = '';
+        btn.style.boxShadow = '';
+        btn.disabled = false;
+      }, 4000);
     } catch (err) {
-      // Network error â€” server not running
-      btn.textContent = '✕ Server not reachable';
+      btn.innerHTML = '&#10005; Error saving reservation';
       btn.style.background = 'linear-gradient(135deg, #f87171, #ef4444)';
       btn.style.opacity = '1';
 
