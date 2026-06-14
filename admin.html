@@ -246,6 +246,7 @@
       font-family: 'Inter', sans-serif !important;
       padding: 10px !important;
       border-radius: 12px !important;
+      width: max-content !important;
     }
     .flatpickr-months {
       background: var(--bg-surface) !important;
@@ -256,9 +257,10 @@
       color: var(--text) !important;
       fill: var(--text) !important;
       height: 40px !important;
+      position: relative !important;
     }
     .flatpickr-current-month {
-        padding-top: 16px !important;
+        padding-top: 14px !important;
         font-size: 1.1rem !important;
         display: flex !important;
         align-items: center !important;
@@ -280,13 +282,17 @@
         outline: none !important;
         width: auto !important;
         margin: 0 !important;
+        padding: 2px 4px !important;
+        line-height: normal !important;
       }
     .flatpickr-current-month .flatpickr-monthDropdown-months option {
       background: #161c26 !important;
       color: #e5e7eb !important;
     }
     .flatpickr-current-month .numInputWrapper { display: none !important; }
-    .flatpickr-prev-month, .flatpickr-next-month { top: 15px !important; }
+    .flatpickr-prev-month, .flatpickr-next-month {
+      top: 16px !important;
+    }
     .flatpickr-prev-month svg, .flatpickr-next-month svg {
       fill: var(--text) !important;
       width: 12px !important;

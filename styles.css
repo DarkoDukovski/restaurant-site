@@ -1,4 +1,4 @@
-﻿/* Custom Properties - Midnight Elegance */
+/* Custom Properties - Midnight Elegance */
 :root {
   --clr-bg: #0f1219;
   --clr-bg-dark: #0a0d12;
@@ -385,6 +385,7 @@ body::after {
   font-family: 'Inter', sans-serif !important;
   padding: 10px !important;
   border-radius: 12px !important;
+  width: max-content !important;
 }
 .flatpickr-months {
   background: var(--clr-surface) !important;
@@ -395,9 +396,10 @@ body::after {
   color: var(--clr-text) !important;
   fill: var(--clr-text) !important;
   height: 40px !important;
+  position: relative !important;
 }
 .flatpickr-current-month {
-  padding-top: 5px !important;
+  padding-top: 8px !important;
   font-size: 1.1rem !important;
   display: flex !important;
   align-items: center !important;
@@ -409,7 +411,8 @@ body::after {
   color: var(--clr-text) !important;
   font-family: 'Inter', sans-serif !important;
   font-weight: 600 !important;
-  padding: 0 4px !important;
+  padding: 2px 4px !important;
+  line-height: normal !important;
   appearance: none;
   -webkit-appearance: none;
   outline: none !important;
@@ -432,7 +435,7 @@ body::after {
   display: none !important;
 }
 .flatpickr-prev-month, .flatpickr-next-month {
-  top: 15px !important;
+  top: 14px !important;
 }
 .flatpickr-prev-month svg, .flatpickr-next-month svg {
   fill: var(--clr-text) !important;
